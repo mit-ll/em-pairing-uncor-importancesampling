@@ -1,0 +1,5 @@
+SPDXVersion: SPDX-2.1
+PackageName: em-pairing-uncor-importancesampling
+PackageOriginator: MIT Lincoln Laboratory
+PackageHomePage: https://github.com/Airspace-Encounter-Models/em-pairing-uncor-importancesampling
+PackageLicenseDeclared: X11
