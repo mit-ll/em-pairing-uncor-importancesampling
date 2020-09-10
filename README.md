@@ -186,6 +186,10 @@ The current known limitations of the Encounter Generation Tool are listed below:
 
 ## Citation
 
+Please use this DOI number reference when citing the software:
+
+[![DOI](https://zenodo.org/badge/294506861.svg)](https://zenodo.org/badge/latestdoi/294506861)
+
 Please use the appropriate documents listed in [`em-overview/README`](https://github.com/Airspace-Encounter-Models/em-overview/blob/master/README.md#documentation) when citing the technical concepts.
 
 ## Distribution Statement
