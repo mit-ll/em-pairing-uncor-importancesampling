@@ -518,6 +518,15 @@ function generateDAAEncounterSet(parameterFile)
         %If desired, convert trajectories to events
         if iniSettings.outputEvents
             samples(j) = wpt2script(trajectoryOut1{j}, trajectoryOut2{j}, encIds(j), iniSettings.altLayers); %#okgrow
+            
+            %If encounters were generated from encounter model events,
+            %output the original events. 
+            if iniSettings.ownshipSampleTrajectory == 0
+                 samples(j).updates(1).event = event1; %#okgrow
+            end
+            if iniSettings.intruderSampleTrajectory == 0
+                 samples(j).updates(2).event = event2; %#okgrow
+            end
         end
     end
     
