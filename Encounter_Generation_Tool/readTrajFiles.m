@@ -23,7 +23,7 @@ own_y_ft = str2double(data(ind_own,3));
 own_alt_ft = str2double(data(ind_own,4));
 own_trk_rad = str2double(data(ind_own,5));
 own_gs_ftps = str2double(data(ind_own,6)); 
-own_vs_ftps = str2double(data(ind_own,7));
+own_vs_ftps = str2double(data(ind_own,7))/60; %fpm to ftps
 own_time_s = str2double(data(ind_own,8)); 
 
 int_x_ft = str2double(data(ind_intr,2));
@@ -31,7 +31,7 @@ int_y_ft = str2double(data(ind_intr,3));
 int_alt_ft = str2double(data(ind_intr,4));
 int_trk_rad = str2double(data(ind_intr,5)); 
 int_gs_ftps = str2double(data(ind_intr,6));
-int_vs_ftps = str2double(data(ind_intr,7));
+int_vs_ftps = str2double(data(ind_intr,7))/60; %fpm to ftps
 int_time_s = str2double(data(ind_intr,8)); 
 
 %Ownship results struct

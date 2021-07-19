@@ -1,7 +1,6 @@
-% Copyright 2018 - 2020, MIT Lincoln Laboratory
-% SPDX-License-Identifier: X11
-%%
 function [encMetadata, encProperties] = computeEncProperties(trajectory1, trajectory2, properties)
+% Copyright 2018 - 2021, MIT Lincoln Laboratory
+% SPDX-License-Identifier: X11
 %This function returns information about the encounters: 
 %
 %encMetaData includes intruder/ownship height and speed at TCA, HMD, VMD,
@@ -11,7 +10,8 @@ function [encMetadata, encProperties] = computeEncProperties(trajectory1, trajec
 %encProperties contains the ownship/intruder heights and speeds over the
 %entire encounter. This is used to filter by min/max height/speeds limits,
 %if desired. 
-    
+% SEE ALSO preallocateEncProperties
+
 %Constants
 fps2kts = 0.592483801295896;
 

@@ -1,7 +1,6 @@
-% Copyright 2018 - 2020, MIT Lincoln Laboratory
-% SPDX-License-Identifier: X11
-%%
 classdef ScriptedEncounter
+    % Copyright 2018 - 2021, MIT Lincoln Laboratory
+    % SPDX-License-Identifier: X11
     %SCRIPTEDENCOUNTER An encounter between one or more aircraft
     %   The initial geometry and subsequent controls of a scripted
     %   encounter between two or more aircraft
@@ -20,14 +19,14 @@ classdef ScriptedEncounter
         pitch_rad   @double% Initial pitch angle
         bank_rad     @double% Initial bank angle
         a_ftpss     @double% Initial longitudinal acceleration
-      
+        
         % Subsequent controls
         
         updates @ EncounterModelEvents % Array of length this.numberOfAircraft of EncounterModelEvents objects
-   
+        
         % Metadata
         runTime_s @double; % Duration of encounter
-        altLayer @double; % Altitude layer are 500-1200, 1200-3000, 3000-5000, 5000-18000 for uncorrelated model
+        altLayer @double; % Altitude layer could consist of 50-500, 500-1200, 1200-3000, 3000-5000, 5000-18000 for uncorrelated models
         
     end
     
@@ -51,7 +50,7 @@ classdef ScriptedEncounter
                     this.pitch_rad(k)   = initial.( [ 'theta' num2str(k) '_rad' ] );
                     this.bank_rad(k)   = initial.( [ 'phi' num2str(k) '_rad' ] );
                     this.a_ftpss(k)    = initial.( [ 'a' num2str(k) '_ftpss' ] );
-
+                    
                     this.updates(k)  = EncounterModelEvents( 'event', varargin{k} );
                 end
             end

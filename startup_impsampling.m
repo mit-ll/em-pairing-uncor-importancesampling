@@ -1,4 +1,4 @@
-% Copyright 2018 - 2020, MIT Lincoln Laboratory
+% Copyright 2018 - 2021, MIT Lincoln Laboratory
 % SPDX-License-Identifier: X11
 %% Startup script
 % This script should be run before using the encounter model tool. It
@@ -7,9 +7,15 @@
 
 disp(['Running DAA Encounter Tool startup script...' '(' which('startup') ')'] );
 
-% Self
-disp('Adding repository to path');
-addpath(genpath(pwd()));
+%% Self: AEM_DIR_DAAENC
+disp('Adding this repository to path');
+if isempty(getenv('AEM_DIR_DAAENC'))
+    error('startup:aem_dir_daaenc','System environment variable, AEM_DIR_DAAENC, not found\n')
+else
+    addpath(genpath(getenv('AEM_DIR_DAAENC')));
+end
+
+%% Other repos
 
 % AEM_DIR_CORE
 disp('Adding em-core/matlab to path');
@@ -32,12 +38,13 @@ end
 if isempty(getenv('DEGAS_HOME'))
     disp('Reminder to add DEGAS to path, if you have access to it');
 else
-    addpath(genpath(getenv('AEM_DIR_BAYES')));
+    addpath(genpath(getenv('DEGAS_HOME')));
 end
 
-% Check for environment variable AEM_DIR_DAAENC
-if isempty(getenv('AEM_DIR_DAAENC'))
-    error('startup:aem_dir_daaenc','System environment variable, AEM_DIR_DAAENC, not found\n')
+%% MathWorks Products
+product_info = ver;
+if ~any(strcmpi({product_info.Name},'Symbolic Math Toolbox'))
+    error('toolbox:symbmath',sprintf('Symbolic Math Toolbox not found\n'));
 end
 
 disp('Startup Done!'); %Finished!

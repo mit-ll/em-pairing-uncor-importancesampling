@@ -1,8 +1,7 @@
-% Copyright 2018 - 2020, MIT Lincoln Laboratory
-% SPDX-License-Identifier: X11
-%%
 function scriptedEncounter = wpt2script(wp1, wp2, id, altLayers)
 % Pass in the waypoint trajectories (wp1, wp2)
+% Copyright 2018 - 2021, MIT Lincoln Laboratory
+% SPDX-License-Identifier: X11
 
 % Get generic encounter information
 scriptedEncounter = ScriptedEncounter;

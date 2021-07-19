@@ -1,6 +1,6 @@
-% Copyright 2018 - 2020, MIT Lincoln Laboratory
+function writeTrajectoryToFile (traj1, traj2, encId, encounterDir)
+% Copyright 2018 - 2021, MIT Lincoln Laboratory
 % SPDX-License-Identifier: X11
-%%
 % Write input trajectories to a .txt file
 %
 % Inputs:
@@ -17,22 +17,19 @@
 %       [SHIP]_speed_ftps   Airspeed (feet per second)
 %       [SHIP]_dh_ftps      Vertical speed (feet per second)
 %       [SHIP]_time_s       Time (seconds)
-% ----
 
-function writeTrajectoryToFile (traj1, traj2, encId, encounterDir)
-
-%Create directory
+% Create directory
 if ~exist(encounterDir,'dir')
     mkdir(encounterDir);
 end
 
-%Open file and set up header
+% Open file and set up header
 filename = [encounterDir filesep num2str(encId) '.txt'];
-fid = fopen (filename, 'w');
+fid = fopen (filename, 'w' ,'native', 'UTF-8');
 fprintf (fid, 'NAME,          east,   north,   alt,   hdg,    speed,    dh,    time\n');
 fprintf (fid, 'unitless,      [ft],   [ft],   [ft],  [rad],  [ftps],  [ftps], [s]\n');
 
-%Write ownship trajectory to file
+% Write ownship trajectory to file
 for ii = 1:numel(traj1.time) - 1
     fprintf (fid, 'OWNSHIP, %.3f, %.3f, %.3f, %.2f, %.2f, %.2f, %.1f\n', ...
         traj1.east_ft(ii), traj1.north_ft(ii), ...
@@ -41,7 +38,7 @@ for ii = 1:numel(traj1.time) - 1
         traj1.time(ii));
 end
 
-%Write intruder trajectory to file
+% Write intruder trajectory to file
 for ii = 1:numel(traj2.time) - 1
     fprintf (fid, 'INTRUDER, %.3f, %.3f, %.3f, %.2f, %.2f, %.2f, %.1f\n', ...
         traj2.east_ft(ii), traj2.north_ft(ii), ...
@@ -50,4 +47,5 @@ for ii = 1:numel(traj2.time) - 1
         traj2.time(ii));
 end
 
+% Close file
 fclose (fid);

@@ -39,6 +39,10 @@ octave-workspace
 ~*.tmp
 
 # Directory specific
+Inputs/**/*.ini
+Outputs/**/*.mat
+Outputs/**/*.csv
+Outputs/**/*.txt
 Tests/**/*.mat
 Tests/Generated_Encounters/**/*.txt
 Tests/Code_Coverage/**/*.png
@@ -50,3 +54,4 @@ Tests/Test_Outputs/**/*.txt
 *.js
 *.html
 *.css
+*.png

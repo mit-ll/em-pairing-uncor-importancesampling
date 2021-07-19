@@ -1,8 +1,21 @@
-% Copyright 2018 - 2020, MIT Lincoln Laboratory
-% SPDX-License-Identifier: X11
 function checkEncounterModelInputs(ac)
+% Copyright 2018 - 2021, MIT Lincoln Laboratory
+% SPDX-License-Identifier: X11
 % Verify that aircraft struct (ac) has valid encounter statistics and
 % variables.
+% SEE ALSO checkINIInputs em_read generateDAAEncounterSet
+
+%% Check that model using the uncorrelated bayes net
+% generateDAAEncounterSet assumes the uncorrelated bayes net and there are
+% some variables / functions that are hardcoded in response
+% Expected labels of initial network
+labels_initial = {'"G"';'"A"';'"L"';'"v"';'"\dot v"';'"\dot h"';'"\dot \psi" '};
+
+errMsg = sprintf('The input model initial network labels are not what is expected');
+assert(all(strcmp(labels_initial, ac.labels_initial)),errMsg);
+
+errMsg = sprintf('The expected uncorrelated encounter models have 7 variables in the initial network, the input model has %i', ac.n_initial);
+assert(ac.n_initial == 7,errMsg);
 
 %% Check values in the vector are numeric and non-negative
 numericalVars = {'r_initial','r_transition'};

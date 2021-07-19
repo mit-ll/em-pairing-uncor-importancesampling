@@ -7,11 +7,13 @@ This repository is the public release of the DAA Encounter Generation Tool. This
   - [Encounter Models](#encounter-models)
   - [Tool Overview](#tool-overview)
   - [Directory Structure](#directory-structure)
+    - [doc](#doc)
     - [Encounter_Generation_Tool](#encounter_generation_tool)
     - [Example_Inputs](#example_inputs)
     - [Example_Outputs](#example_outputs)
     - [Example_Trajectory_Encounters](#example_trajectory_encounters)
-    - [doc](#doc)
+    - [Inputs](#inputs)
+    - [Outputs](#outputs)
     - [Tests](#tests)
   - [Initial Setup](#initial-setup)
     - [Persistent System Environment Variables](#persistent-system-environment-variables)
@@ -43,7 +45,7 @@ VMD | Vertical Miss Distance
 
 ## Encounter Models
 
-For many aviation Detect and Avoid (DAA) safety studies, aircraft behavior and relative geometry is represented using encounter models, which are statistical models of how aircraft behave during close encounters. They are used to provide a realistic representation of the range of encounter flight dynamics where an aircraft DAA system would be likely to alert. Encounter models represent the encounter geometry, but also the aircraft behavior (accelerations) during the course of the encounter. Encounter models have been developed for many different manned operational contexts, but there are new considerations for unmanned aircraft operations including the lower operating altitudes and interactions with service providers and other users. For a complete overview of MIT Lincoln Laboratory’s encounter models and to access these models, please see https://github.com/Airspace-Encounter-Models/em-overview.
+For many aviation Detect and Avoid (DAA) safety studies, aircraft behavior and relative geometry is represented using encounter models, which are statistical models of how aircraft behave during close encounters. They are used to provide a realistic representation of the range of encounter flight dynamics where an aircraft DAA system would be likely to alert. Encounter models represent the encounter geometry, but also the aircraft behavior (accelerations) during the course of the encounter. Encounter models have been developed for many different manned operational contexts, but there are new considerations for unmanned aircraft operations including the lower operating altitudes and interactions with service providers and other users. For a complete overview of MIT Lincoln Laboratory’s encounter models and access to these models, please see https://github.com/Airspace-Encounter-Models/em-overview.
 
 ## Tool Overview
 
@@ -51,21 +53,25 @@ The Encounter Generation Tool performs all of the steps necessary to generate a 
 
 ![Encounter Generation Process](./doc/Flowchart.png)*Encounter Generation Process*
 
-The first step of generating encounters is to sample trajectories for the ownship and intruder. The trajectories can be sampled from an encounter model or they can be sampled from a set of pre-generated trajectories (e.g., tracks observed in flight test data). The encounter model defines trajectories in terms of events, which specify the times at which a change in dynamics (e.g., turn rate, vertical rate, or acceleration) occurs. The ownship and intruder trajectories may be sampled from different sources. This step of the process is performed by [dbn_hierarchical_sample.m](./Encounter_Generation_Tool/dbn_hierarchical_sample.m) for encounter model samples and [sampleTrajectory.m](./Encounter_Generation_Tool/sampleTrajectory.m) for trajectory samples.
+The first step of generating encounters is to sample trajectories for the ownship and intruder. The trajectories can be sampled from an encounter model or they can be sampled from a set of pre-generated trajectories (e.g., tracks observed in flight test data). The encounter model defines trajectories in terms of events, which specify the times at which a change in dynamics (e.g., turn rate, vertical rate, or acceleration) occurs. The ownship and intruder trajectories may be sampled from different sources. This step of the process is performed by [`dbn_hierarchical_sample.m`](./Encounter_Generation_Tool/dbn_hierarchical_sample.m) for encounter model samples and [`sampleTrajectory.m`](./Encounter_Generation_Tool/sampleTrajectory.m) for trajectory samples.
 
 The next step is to determine where to position the two trajectories with respect to one another based on sampled values of VMD and HMD. The encounter generation tool uses a statistical technique known as importance sampling to oversample encounters of interest (e.g., NMACs). To do this, encounters are sampled using “proposed” distributions of VMD and HMD, chosen by the user. In a typical use case, these distributions are concentrated on VMDs of less 100 ft and HMDs of less than 500 ft in order to increase the number of NMACs that are generated. A large number of NMACs is needed in order to be able to estimate the risk ratio of a Detect-and-Avoid (DAA) system with statistical significance. However, this many NMACs do not naturally occur in the airspace. Hence, to compute metrics, the encounters must be reweighted to match the “actual” or nominal distributions of VMD and HMD observed in the real world. More information about importance sampling can be found [here](https://statweb.stanford.edu/~owen/mc/Ch-var-is.pdf).
 
 The first part of the importance sampling process is sampling VMD for the encounter. Rejection sampling is performed until a pair of trajectories with the desired VMD are sampled. Rejection sampling is performed for VMD (whereas HMD is sampled directly), because the nominal VMD distribution is not known a priori, as it is defined by the altitude distributions of both aircraft.
 
-Once the trajectories are sampled, they must be oriented relative to each other to form an encounter. This step of the process is performed by [initializeUncorrelatedEncounter.m](./Encounter_Generation_Tool/initializeUncorrelatedEncounter.m). During this step, HMD is sampled and the trajectories are rotated so that the encounter’s HMD and VMD match the sampled values. An encounter weight is also computed to reweight the distributions of VMDs and HMDs back to their nominal distributions: the encounter weight is part of the importance sampling process and should be used when computing all summary metrics.
+Once the trajectories are sampled, they must be oriented relative to each other to form an encounter. This step of the process is performed by [`initializeUncorrelatedEncounter.m`](./Encounter_Generation_Tool/initializeUncorrelatedEncounter.m). During this step, HMD is sampled and the trajectories are rotated so that the encounter’s HMD and VMD match the sampled values. An encounter weight is also computed to reweight the distributions of VMDs and HMDs back to their nominal distributions: the encounter weight is part of the importance sampling process and should be used when computing all summary metrics.
 
 Once the relative geometries of the trajectories have been determined, the generation process is complete. At this stage, any additional desired rejection sampling (e.g., to limit the minimum/maximum altitude/speed of the ownship/intruder) is performed. If the encounter is satisfactory, the encounter is saved out in a user-specified format (either encounter model events or trajectory waypoint files), and associated metadata for the encounter (e.g., HMD, VMD) are saved in a Matlab data (.mat) file.
 
-**Note:** If the encounters are being generated for use with DEGAS (_a link to the DEGAS github page will be added when available_), DEGAS currently expects encounter model events as inputs. For the final release, DEGAS will accept both events and trajectories as inputs.
+If the encounters are being generated for use with [DEGAS](https://github.com/mit-ll/degas-core), DEGAS currently supports both encounter model events or trajectories as inputs.
 
 ## Directory Structure
 
 The Encounter Generation Tools top-level directory contains the following directories:
+
+### doc
+
+This folder contains images used by Markdown files.
 
 ### Encounter_Generation_Tool
 
@@ -83,9 +89,13 @@ The Encounter Generation Tool outputs encounters and their corresponding metadat
 
 This folder contains a set of 100 trajectories sampled from the Uncorrelated Encounter Model and their associated metadata. These are used for verification testing.
 
-### doc
+### Inputs
 
-This folder contains images used by Markdown files.
+Default folder for storing user generated input parameter files.
+
+### Outputs
+
+Default folder for storing user generated encounters and their corresponding metadata.
 
 ### Tests
 
@@ -114,22 +124,22 @@ This repository includes code written in C that needs to be compiled using [`mex
 | run_dynamics_fast.c  | Encounter_Generation_Tool  |
 | run_dynamics_fast_test.c   | Tests/Code/Helper_Functions  |
 
-For each file, change into the directory containing the file and execute `mex filename.c` in the command line. This will generate a [MEX function](https://www.mathworks.com/help/matlab/call-mex-file-functions.html)--e.g., `filename.mexw64` for windows or `filename.mexa64` for linux. For example:
+For each file, change into the directory containing the file and execute `mex -g filename.c` in the command line. According to [MATLAB documentation](https://www.mathworks.com/help/matlab/ref/mex.html), `-g,` "Adds symbolic information and disables optimizing built object code." While this is flag is primarily used for debugging, there is a known bug, likely in the .c source, where the compiled mex functions will cause segmentation faults on Mac and Linux environments when compiled without the flag. This will generate a [MEX function](https://www.mathworks.com/help/matlab/call-mex-file-functions.html)--e.g., `filename.mexw64` for windows or `filename.mexa64` for linux. For example:
 
 ``` matlab
-mex Encounter_Generation_Tool/run_dynamics_fast.c
-mex Tests/Code/Helper_Functions/run_dynamics_fast_test.c
+mex -g Encounter_Generation_Tool/run_dynamics_fast.c
+mex -g Tests/Code/Helper_Functions/run_dynamics_fast_test.c
 ```
 
 ### Testing the tool
 
 1. Startup MATLAB and change the current directory to the main `/DAA_Encounter_Tool/` directory.
-2. Run [`startup`](startup.m) to set the MATLAB path and configuration. This script needs to be run at the beginning of every MATLAB session where the Encounter Generation Tool will be used.
+2. Run [`startup_impsampling`](startup_impsampling.m) to set the MATLAB path and configuration. This script needs to be run at the beginning of every MATLAB session where the Encounter Generation Tool will be used.
 3. Mex the files described in the previous section. This step only needs to be performed once.
-3. Run [`RUN_DAAEncounterModelTool_serial`](RUN_DAAEncounterModelTool_serial.m) in the root directory of this repository.
-4. If there are no errors, then the Encounter Generation Tool has been set up correctly.
+4. Run [`RUN_DAAEncounterModelTool_serial`](RUN_DAAEncounterModelTool_serial.m) in the root directory of this repository.
+5. If there are no errors, then the Encounter Generation Tool has been set up correctly.
 
-**Note:** Matlab's Symbolic Math Toolbox is required in order to run the Encounter Generation Tool. 
+**Note:** Matlab's Symbolic Math Toolbox is required in order to run the Encounter Generation Tool.
 
 ## Run Order
 
@@ -180,15 +190,13 @@ The units of inputs to the Encounter Generation Tool are converted to the units 
 Variable names will include units whenever possible for clarity.
 
 ## Known Issues/Limitations
+
 The current known limitations of the Encounter Generation Tool are listed below:
+
 - There may be some loss in fidelity when trajectories are converted from waypoints to encounter model events. For this reason, users are discouraged from saving generated encounters as events when pre-defined trajectories are used. Note that the final release of DEGAS will accept both trajectories and encounter model events as inputs.
-- Samples from the Uncorrelated Encounter Model may result in trajectories with speeds that approach 0 (due to decelerations). Such trajectories results in unexpected behavior when simulated through the DEGAS dynamics model. Thus, it is recommended that encounters with these trajectories be discarded. The likelihood of generating encounters with these types of trajectories can be reduced by setting `minOwnSpeed_kts` and `minIntSpeed_kts` in the .INI parameter file to be some number greater that 0. 
+- Samples from the Uncorrelated Encounter Model may result in trajectories with speeds that approach 0 (due to decelerations). Such trajectories results in unexpected behavior when simulated through the DEGAS dynamics model. Thus, it is recommended that encounters with these trajectories be discarded. The likelihood of generating encounters with these types of trajectories can be reduced by setting `minOwnSpeed_kts` and `minIntSpeed_kts` in the .INI parameter file to be some number greater that 0.
 
 ## Citation
-
-Please use this DOI number reference when citing the software:
-
-[![DOI](https://zenodo.org/badge/294506861.svg)](https://zenodo.org/badge/latestdoi/294506861)
 
 Please use the appropriate documents listed in [`em-overview/README`](https://github.com/Airspace-Encounter-Models/em-overview/blob/master/README.md#documentation) when citing the technical concepts.
 
@@ -196,8 +204,8 @@ Please use the appropriate documents listed in [`em-overview/README`](https://gi
 
 DISTRIBUTION STATEMENT A. Approved for public release. Distribution is unlimited.
 
-© 2018, 2019, 2020 Massachusetts Institute of Technology.
+© 2018, 2019, 2020, 2021 Massachusetts Institute of Technology.
 
-This material is based upon work supported by the National Aeronautics and Space Administration under Air Force Contract No. FA8702-15-D-0001. Any opinions, findings, conclusions or recommendations expressed in this material are those of the author(s) and do not necessarily reflect the views of the National Aeronautics and Space Administration .
+This material is based upon work supported by the National Aeronautics and Space Administration under Air Force Contract No. FA8702-15-D-0001. Any opinions, findings, conclusions or recommendations expressed in this material are those of the author(s) and do not necessarily reflect the views of the National Aeronautics and Space Administration.
 
 Delivered to the U.S. Government with Unlimited Rights, as defined in DFARS Part 252.227-7013 or 7014 (Feb 2014). Notwithstanding any copyright notice, U.S. Government rights in this work are defined by DFARS 252.227-7013 or DFARS 252.227-7014 as detailed above. Use of this work other than as specifically authorized by the U.S. Government may violate any copyrights that exist in this work.

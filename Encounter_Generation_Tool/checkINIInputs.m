@@ -28,18 +28,6 @@ function checkINIInputs(iniFile)
         end     
     end
     
-    %% Check ownshipEmFile - warning if not using uncor_v2p1.txt
-    if isempty(strfind(iniSettings.ownshipEmFile,'uncor_1200code_v2p1.txt'))
-        warnMsg = 'The MIT LL uncorrelated model file is uncor_1200code_v2p1.txt. Generated encounters may have unexpected behavior if a different file is used';
-        warning(warnMsg);
-    end
-    
-    %% Check intruderEmFile - warning if not using uncor_v2p1.txt
-    if isempty(strfind(iniSettings.intruderEmFile,'uncor_1200code_v2p1.txt'))
-        warnMsg = 'The MIT LL uncorrelated model file is uncor_1200code_v2p1.txt. Generated encounters may have unexpected behavior if a different file is used';
-        warning(warnMsg);
-    end
-    
     %% Check bin_edges are monotonically increasing
     assert(all(diff(iniSettings.bin_edges_VMD)>=0), 'bin_edges_VMD must increase monotonically');
     assert(all(diff(iniSettings.bin_edges_HMD)>=0), 'bin_edges_HMD must increase monotonically');
@@ -55,7 +43,7 @@ function checkINIInputs(iniFile)
     
     %% Check encIds are numeric and all unique
     assert(numel(unique(iniSettings.encIds)) == numel(iniSettings.encIds), 'All encIds must be unique');
-    assert(isnumeric(iniSettings.encIds) & all(floor(iniSettings.encIds) == ceil(iniSettings.encIds)), 'All encIds must be integer');
+    assert(isnumeric(iniSettings.encIds) & all(iniSettings.encIds == ceil(iniSettings.encIds)), 'All encIds must be integer');
    
     %% Check miscellaneous numerical parameters are numerical and non-negative
     numericalVars = {'H_min','R_min','randSeed','maxOwnAlt_ft', 'minOwnAlt_ft', 'maxIntAlt_ft', 'minIntAlt_ft', ...

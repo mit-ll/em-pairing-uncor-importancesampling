@@ -22,6 +22,9 @@ encIds = iniSettings.encIds;
 % Read in saved encounters
 s = load([getenv('AEM_DIR_DAAENC') filesep  iniSettings.saveDirectory filesep 'scriptedEncounters.mat']);
 
+% Read in performance benchmarks
+benchmark = load([getenv('AEM_DIR_DAAENC') filesep  iniSettings.saveDirectory filesep 'benchmark.mat']);
+
 %% Simulate encounters
 % Iterate
 for i = encIds
@@ -63,3 +66,8 @@ for i = encIds
         title(sprintf('Plan View - Encounter %i', encIds(i)));
     end
 end
+
+%% Plot benchmarks
+figure; set(gcf,'name','benchmark');
+subplot(2,1,1); histogram(benchmark.numTrials,0:2:max(benchmark.numTrials)); title('Trials Required to Generate a Encounter'); ylabel('Encounters'); xlabel('# Trials'); grid on;
+subplot(2,1,2); ecdf(benchmark.jobTime_s); title('Time (s)'); ylabel('CDF'); xlabel('Seconds'); grid on;
