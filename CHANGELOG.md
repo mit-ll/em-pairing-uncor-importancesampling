@@ -7,7 +7,7 @@ and this project should adhere to [Semantic Versioning](https://semver.org/spec/
 
 ## [Unreleased]
 
-## [1.2.0] - 2021-07-XX
+## [1.2.0] - 2021-07-19
 
 ### Added
 
@@ -31,7 +31,7 @@ and this project should adhere to [Semantic Versioning](https://semver.org/spec/
 
 - Random seed sequentially updated and guaranteed to be unique up to a seed of 2^32 (the MATLAB limit)
 - Fix bug when checking duplicate settings when looking if there has been any encounter model customization
--  `generateDAAEncounterSet` formats input to `wpt2script` correctly
+- `generateDAAEncounterSet` formats input to `wpt2script` correctly
 
 ### Removed
 
