@@ -9,23 +9,27 @@ function checkEncounterModelInputs(ac)
 % generateDAAEncounterSet assumes the uncorrelated bayes net and there are
 % some variables / functions that are hardcoded in response
 % Expected labels of initial network
-labels_initial = {'"G"';'"A"';'"L"';'"v"';'"\dot v"';'"\dot h"';'"\dot \psi" '};
+labels_initial = strtrim({'"G"';'"A"';'"L"';'"v"';'"\dot v"';'"\dot h"';'"\dot \psi" '});
+
+if isrow(ac.labels_initial) & ~isrow(labels_initial)
+    labels_initial = labels_initial';
+end
 
 errMsg = sprintf('The input model initial network labels are not what is expected');
-assert(all(strcmp(labels_initial, ac.labels_initial)),errMsg);
+assert(all(strcmp(labels_initial, strtrim(ac.labels_initial))),errMsg);
 
 errMsg = sprintf('The expected uncorrelated encounter models have 7 variables in the initial network, the input model has %i', ac.n_initial);
 assert(ac.n_initial == 7,errMsg);
 
 %% Check values in the vector are numeric and non-negative
-numericalVars = {'r_initial','r_transition'};
+numericalVars = strtrim({'r_initial','r_transition'});
 for i = 1:numel(numericalVars)
     errMsg = sprintf('Elements of %s must be >=0\n', numericalVars{i});
     assert(isnumeric(ac.(numericalVars{i})) && all(ac.(numericalVars{i})>=0), errMsg);
 end
 
 %% Check values in the cell array are numeric and non-negative
-numericalCells = {'N_initial', 'N_transition'};
+numericalCells = strtrim({'N_initial', 'N_transition'});
 for i = 1:numel(numericalCells)
     errMsg = sprintf('Elements of %s must be >=0\n', numericalCells{i});
     for j = 1:numel(ac.(numericalCells{i}))
@@ -34,7 +38,7 @@ for i = 1:numel(numericalCells)
 end
 
 %% Check values are logical
-logicalVars = {'G_initial', 'G_transition'};
+logicalVars = strtrim({'G_initial', 'G_transition'});
 for i = 1:numel(logicalVars)
     errMsg = sprintf('%s must be logical\n', logicalVars{i});
     assert(islogical(ac.(logicalVars{i})), errMsg);
@@ -52,7 +56,7 @@ assert(ac.n_initial == numel(ac.labels_initial), 'n_initial should equal the num
 [rowG_init,colG_init] = size(ac.G_initial);
 assert(rowG_init == ac.n_initial && colG_init == ac.n_initial, 'The dimensions of G_initial should be n_initial x n_initial');
 
-initial_dimension_vars = {'r_initial','N_initial','boundaries'};
+initial_dimension_vars = strtrim({'r_initial','N_initial','boundaries'});
 for i = 1:numel(initial_dimension_vars)
     errMsg = sprintf('The number of elements in %s should equal n_initial',initial_dimension_vars{i});
     assert(numel(ac.(initial_dimension_vars{i}))==ac.n_initial, errMsg);
@@ -63,7 +67,7 @@ assert(ac.n_transition == numel(ac.labels_transition), 'n_transition should equa
 [rowG_trans,colG_trans] = size(ac.G_transition);
 assert(rowG_trans == ac.n_transition && colG_trans == ac.n_transition, 'The dimensions of G_transition should be n_transition x n_transition');
 
-transition_dimension_vars = {'r_transition','N_transition'};
+transition_dimension_vars = strtrim({'r_transition','N_transition'});
 for i = 1:numel(transition_dimension_vars)
     errMsg = sprintf('The number of elements in %s should equal n_transition',transition_dimension_vars{i});
     assert(numel(ac.(transition_dimension_vars{i}))==ac.n_transition, errMsg);

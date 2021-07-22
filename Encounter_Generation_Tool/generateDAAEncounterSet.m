@@ -268,8 +268,7 @@ for j = 1:N %Loop through number of encounters
                     initial = {[],[],[],[],[],[],[]};
                 end
                 
-                [init1, events] = dbn_hierarchical_sample(ac1.G_initial, ac1.G_transition, ac1.temporal_map, ...
-                    ac1.r_transition, ac1.N_initial, ac1.N_transition, dirichlet_initial1, dirichlet_transition1, ...
+                [init1, events] = dbn_hierarchical_sample(ac1, dirichlet_initial1, dirichlet_transition1, ...
                     sample_time, ac1.boundaries, ac1.zero_bins, ac1.resample_rates, initial);
                 
                 % uniform draw for AC1 initial altitude within laye
@@ -342,8 +341,7 @@ for j = 1:N %Loop through number of encounters
                     initial = {[],[],[],[],[],[],[]};
                 end
                 
-                [init2, events] = dbn_hierarchical_sample(ac2.G_initial, ac2.G_transition, ac2.temporal_map, ...
-                    ac2.r_transition, ac2.N_initial, ac2.N_transition, dirichlet_initial2, dirichlet_transition2, ...
+                [init2, events] = dbn_hierarchical_sample(ac2, dirichlet_initial2, dirichlet_transition2, ...
                     sample_time, ac2.boundaries, ac2.zero_bins, ac2.resample_rates, initial);
                 
                 % uniform draw for AC2 initial altitude within layer
