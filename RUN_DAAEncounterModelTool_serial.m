@@ -7,7 +7,7 @@
 parameterFile = [getenv('AEM_DIR_DAAENC') filesep 'Example_Inputs' filesep 'UncorVsUncor.ini'];
 
 % If true, plot
-isPlot = false;
+isPlot = true;
 
 %% Generate Uncorrelated Encounters
 generateDAAEncounterSet(parameterFile);
@@ -40,7 +40,11 @@ for i = encIds
     event2 = sample.updates(2).event;
     
     % Simulate dynamics
-    results = run_dynamics_fast(ic1,event1,ic2,event2,sample.runTime_s);
+    % Dynamic constraints
+    % v_low,v_high,dh_ftps_min,dh_ftps_max,qmax,rmax
+    dyn1 = [1.7 1116 -10000 10000 deg2rad(3), 1000000];
+    dyn2 = [1.7 1116 -10000 10000 deg2rad(3), 1000000];
+    results = run_dynamics_fast(ic1,event1,dyn1,ic2,event2,dyn2,sample.runTime_s);
     
     if isPlot
         % Initialize figure

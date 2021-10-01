@@ -3,83 +3,94 @@
 %%
 % RUNDYNAMICSFASTTESTS This test involves inputting basic encounter events
 % into runDynamicsFast to ensure proper responses. This includes testing
-% different turn/climb rates.
+% different turn/climb rates. The baseline results were generated using
+% based on public commit e87e94a of https://github.com/Airspace-Encounter-Models/em-pairing-uncor-importancesampling
 
-% Load example encounter events
-s = load([getenv('AEM_DIR_DAAENC'), '/Tests' filesep 'Test_Inputs' filesep 'dynamicsTestInputs.mat']);
-s = s.s;
+%% General inputs
 encId = 1;
 plotFigures = false;
 saveDirectory = [getenv('AEM_DIR_DAAENC'), '/Tests' filesep 'Test_Outputs' filesep 'DynamicsTests'];
 
-%% Level flight
-results = simulateDynamics(s.Level);
-figNameExtension = 'Level';
-plotExampleEncounter(results, encId, plotFigures, saveDirectory, figNameExtension);
+% Tolerance for radians
+tol_rad = 1e-12;
 
-%% Horizontal turn
-results = simulateDynamics(s.HorizontalTurn);
-figNameExtension = 'HorizontalTurn';
-plotExampleEncounter(results, encId, plotFigures, saveDirectory, figNameExtension);
+%% level, horizontal turn, climb, descend, turns and vertical rates, acceleration
+% Load example encounter events
+data = load([getenv('AEM_DIR_DAAENC'), '/Tests' filesep 'Test_Inputs' filesep 'dynamicsTestInputs.mat'],'s','resultsBaseline');
+s = data.s;
+resultsBaseline = data.resultsBaseline;
 
-%% Climb
-results = simulateDynamics(s.Climb);
-figNameExtension = 'Climb';
-plotExampleEncounter(results, encId, plotFigures, saveDirectory, figNameExtension);
+% Determine number of fields and preallocate
+fields = fieldnames(s);
+n = numel(fields);
+results = cell(size(n,1));
 
-%% Descend
-results = simulateDynamics(s.Descend);
-figNameExtension = 'Descend';
-plotExampleEncounter(results, encId, plotFigures, saveDirectory, figNameExtension);
+% Simulate
+for ii=1:1:n
+    results{ii} = simulateDynamics(s.(fields{ii}));
+    
+    if plotFigures
+        plotExampleEncounter(results{ii}, encId, plotFigures, saveDirectory, figNameExtension);
+    end
+end
 
-%% Encounter with turns and vertical rates (simultaneously?)
-results = simulateDynamics(s.TurnAndVerticalRate);
-figNameExtension = 'TurnAndVerticalRate';
-plotExampleEncounter(results, encId, plotFigures, saveDirectory, figNameExtension);
+% Compare
+for ii=1:1:n
+    for jj=1:1:numel(resultsBaseline{ii})
+        baseline = resultsBaseline{ii}(jj);
+        new = results{ii}(jj);
+        
+        assert(all(baseline.time == new.time));
+        assert(all(baseline.north_ft == new.north_ft))
+        assert(all(baseline.east_ft == new.east_ft))
+        assert(all(baseline.up_ft == new.up_ft))
+        assert(all(baseline.speed_ftps == new.speed_ftps))
+        assert(all(abs(baseline.phi_rad - new.phi_rad) <= tol_rad))
+        assert(all(abs(baseline.theta_rad - new.theta_rad) <= tol_rad))
+        assert(all(abs(baseline.psi_rad - new.psi_rad) <= tol_rad))
+    end
+end
 
-%% Acceleration
-% Ownship decelerates to 0 and intruder increases speed -- plot speed plot
-results = simulateDynamics(s.Accel);
-figNameExtension = 'Accel';
-plotExampleEncounter(results, encId, plotFigures, saveDirectory, figNameExtension);
 
 %% Test turn rate/vertical rate limits in runDynamicsFast
+% Turn rate span, 6 degrees, vertical rate span,
+% vertical rate 15 ft/s, vertical rate 25 ft/s, vertical rate 50 ft/s
 % Load test data
-s = load([getenv('AEM_DIR_DAAENC'), '/Tests' filesep 'Test_Inputs' filesep 'dynamicsTestInputsLimits.mat']);
-s = s.s_limits;
+data = load([getenv('AEM_DIR_DAAENC'), '/Tests' filesep 'Test_Inputs' filesep 'dynamicsTestInputsLimits.mat'],'s_limits','resultsBaseline');
+s = data.s_limits;
+resultsBaseline = data.resultsBaseline;
 saveDirectory = [getenv('AEM_DIR_DAAENC'), '/Tests' filesep 'Test_Outputs' filesep 'DynamicsTestsLimits'];
 
-% Test turn rate limit set to 3 degrees and commanded turn rate set to 1.5,
-% 3, and 6 degrees -- plots for 3 degrees and 6 degrees should match
-% 1.5 degrees
-results = simulateDynamicsLimits(s.turn1_5);
-figNameExtension = 'Turn1_5';
-plotExampleEncounter(results, encId, plotFigures, saveDirectory, figNameExtension);
 
-% 3 degrees
-results = simulateDynamicsLimits(s.turn3);
-figNameExtension = 'Turn3';
-plotExampleEncounter(results, encId, plotFigures, saveDirectory, figNameExtension);
+% Determine number of fields and preallocate
+fields = fieldnames(s);
+n = numel(fields);
+results = cell(size(n,1));
 
-% 6 degrees
-results = simulateDynamicsLimits(s.turn6);
-figNameExtension = 'Turn6';
-plotExampleEncounter(results, encId, plotFigures, saveDirectory, figNameExtension);
+% Simulate
+for ii=1:1:n
+    results{ii} = simulateDynamicsLimits(s.(fields{ii}));
+    
+    if plotFigures
+        figNameExtension = fields{ii};
+        plotExampleEncounter(results{ii}, encId, plotFigures, saveDirectory, figNameExtension);
+    end
+end
 
-% Test vertical rate limit set to 25 ft/s and commanded vertical rate set
-% to 15, 25, and 50 ft/s. Ownship will climb and intruder will descend.
-% Plots for 25 ft/s and 50 ft/s should match
-% 15 ft/s
-results = simulateDynamicsLimits(s.VertRate15);
-figNameExtension = 'VertRate15';
-plotExampleEncounter(results, encId, plotFigures, saveDirectory, figNameExtension);
+% Compare
+for ii=1:1:n
+    for jj=1:1:numel(resultsBaseline{ii})
+        baseline = resultsBaseline{ii}(jj);
+        new = results{ii}(jj);
+        
+        assert(all(baseline.time == new.time));
+        assert(all(baseline.north_ft == new.north_ft))
+        assert(all(baseline.east_ft == new.east_ft))
+        assert(all(baseline.up_ft == new.up_ft))
+        assert(all(baseline.speed_ftps == new.speed_ftps))
+        assert(all(abs(baseline.phi_rad - new.phi_rad) <= tol_rad))
+        assert(all(abs(baseline.theta_rad - new.theta_rad) <= tol_rad))
+        assert(all(abs(baseline.psi_rad - new.psi_rad) <= tol_rad))
+    end
+end
 
-% 25 ft/s
-results = simulateDynamicsLimits(s.VertRate25);
-figNameExtension = 'VertRate25';
-plotExampleEncounter(results, encId, plotFigures, saveDirectory, figNameExtension);
-
-% 50 ft/s
-results = simulateDynamicsLimits(s.VertRate50);
-figNameExtension = 'VertRate50';
-plotExampleEncounter(results, encId, plotFigures, saveDirectory, figNameExtension);

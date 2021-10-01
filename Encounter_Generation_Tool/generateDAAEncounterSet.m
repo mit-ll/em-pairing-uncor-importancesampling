@@ -11,6 +11,8 @@ function generateDAAEncounterSet(parameterFile)
 % ------
 % parameterFile - encounter set characteristics (saved as .ini file)
 % ----
+%
+% SEE ALSO UncorEncounterModel checkINIInputs sampleFullUncorModel run_dynamics_fast initializeUncorrelatedEncounter 
 
 %% Verify INI inputs
 checkINIInputs(parameterFile);
@@ -39,9 +41,17 @@ saveDirectory = [getenv('AEM_DIR_DAAENC') filesep iniSettings.saveDirectory];
 
 % alt layers
 dim1 = length(iniSettings.altLayers) / 2;
-layers = reshape (iniSettings.altLayers, 2, dim1)';
+layers = reshape(iniSettings.altLayers, 2, dim1)';
 
-round500 = @(num) 500*(floor(num/500) + (mod(num,500) > 250));
+% Default start used by dbn_hierarchical_sample() in sampleFullUncorModel()
+% Fix geographic region as CONUS (=1), airspace class as other (=4). Optional setting.
+startDefault = {1,4,[],[],[],[],[]};
+
+% Dynamic constraints
+% v_low,v_high,dh_ftps_min,dh_ftps_max,qmax,rmax
+% ftps, ftps, ftps, ftps, rad, rad
+dyn1 = [1.7 1116 -10000 10000 deg2rad(3), 1000000];
+dyn2 = [1.7 1116 -10000 10000 deg2rad(3), 1000000];
 
 trajPerWrite = 10;
 counterWrite = 0;
@@ -68,8 +78,11 @@ if iniSettings.ownshipSampleTrajectory
     metadata = readtable(iniSettings.ownship_trajectory_datafile);
 else
     % load encounter model with sufficient statistics for ownship
+    
+    
+    % Instantiate object
     encFile1 = [getenv('AEM_DIR_BAYES') filesep 'model' filesep iniSettings.ownshipEmFile];
-    ac1 = em_read(encFile1,'isOverwriteZeroBoundaries',true,'idxZeroBoundaries',[1 2 3]); % em_read from em-model-manned-bayes
+    ac1 = UncorEncounterModel('parameters_filename',encFile1,'isOverwriteZeroBoundaries',true,'idxZeroBoundaries',[1 2 3]);
     
     %Read in customized encounter model variables, if provided
     if ~isempty(iniSettings.ownEncVariablesFile)
@@ -102,9 +115,10 @@ else
     %Verify encounter model inputs
     checkEncounterModelInputs(ac1);
     
-    %Set up dirichlets - do not use priors
-    dirichlet_initial1 = bn_dirichlet_prior(ac1.N_initial, 0);
-    dirichlet_transition1 = bn_dirichlet_prior(ac1.N_transition, 0);
+    % Set up dirichlets
+    % dirchlets updated when prior is updated
+    ac1.isAutoUpdate = true;
+    ac1.prior = 0;
 end
 
 %Set up intruder encounter model
@@ -114,8 +128,8 @@ if iniSettings.intruderSampleTrajectory
 else
     % load encounter model with sufficient statistics for intruder
     encFile2 = [getenv('AEM_DIR_BAYES') filesep 'model' filesep iniSettings.intruderEmFile];
-    ac2 = em_read(encFile2,'isOverwriteZeroBoundaries',true,'idxZeroBoundaries',[1 2 3]); % em_read from em-model-manned-bayes
-    
+    ac2 = UncorEncounterModel('parameters_filename',encFile2,'isOverwriteZeroBoundaries',true,'idxZeroBoundaries',[1 2 3]);
+
     %Read in customized encounter model variables, if provided
     if ~isempty(iniSettings.intEncVariablesFile)
         iniSettings.intEncVariablesFile = strrep(iniSettings.intEncVariablesFile,'/','\');
@@ -147,9 +161,10 @@ else
     %Verify encounter model inputs
     checkEncounterModelInputs(ac2);
     
-    %Set up dirichlets - do not use priors
-    dirichlet_initial2 = bn_dirichlet_prior(ac2.N_initial, 0);
-    dirichlet_transition2 = bn_dirichlet_prior(ac2.N_transition, 0);
+    % Set up dirichlets
+    % dirchlets updated when prior is updated
+    ac2.isAutoUpdate = true;
+    ac2.prior = 0;
 end
 
 %% Pair up encounters by height
@@ -257,56 +272,15 @@ for j = 1:N %Loop through number of encounters
             trajectory1 = upsampleTrajectory(trajectory1{1}); % upsample the results to 10hz. *IMPORTANT: assumes input trajectories are 1hz*
             sample1 = [];
         else
-            % Sample from encounter model
-            done = false;
-            while ~done
-                
-                if isempty(iniSettings.ownEncVariablesFile) && isempty(iniSettings.ownEncStatisticsFile)
-                    %Using the default uncorrelated encounter model
-                    initial = {1,4,[],[],[],[],[]}; %Fix geographic region as CONUS (=1), airspace class as other (=4). Optional setting.
-                else
-                    initial = {[],[],[],[],[],[],[]};
-                end
-                
-                [init1, events] = dbn_hierarchical_sample(ac1, dirichlet_initial1, dirichlet_transition1, ...
-                    sample_time, ac1.boundaries, ac1.zero_bins, ac1.resample_rates, initial);
-                
-                % uniform draw for AC1 initial altitude within laye
-                h1 = layers(init1(3),1) + rand*(diff(layers(init1(3),:)));
-                if init1(6) == 0 && iniSettings.quantizeOwnshipAlt500 % round to nearest 500-ft increment if level
-                    h1 = round500(h1);
-                end
-                
-                % make sure vertical rate not greater than airspeed
-                if init1(4)*1.68781 > abs(init1(6))/60
-                    done = true;
-                end
+            
+            if isempty(iniSettings.ownEncVariablesFile) && isempty(iniSettings.ownEncStatisticsFile)
+                start = startDefault;
+            else
+                start = {[],[],[],[],[],[],[]};
             end
+            ac1.start = start;
             
-            % construct controls array for ownship (ac1)
-            controls1 = BuildControlsArray(init1,events,5:7);
-            init1 = ConvertUnits(init1);
-            
-            sample1.runTime_s = sample_time;
-            sample1.altLayer = init1(3);
-            sample1.id = encIds(j);
-            sample1.numberOfAircraft = 2;
-            sample1.v_ftps = init1(4);
-            sample1.n_ft = 0;
-            sample1.e_ft = 0;
-            sample1.h_ft = h1;
-            sample1.heading_rad = 0;
-            sample1.pitch_rad = asin(init1(6)/sample1.v_ftps);
-            sample1.bank_rad = atan(sample1.v_ftps*init1(7)/constants.g);
-            sample1.a_ftpss = init1(5);
-            sample1.updates = EncounterModelEvents( 'event', controls1 );
-            
-            % Simulate dynamics
-            ic1 = [0,sample1.v_ftps,sample1.n_ft,sample1.e_ft,sample1.h_ft,sample1.heading_rad,sample1.pitch_rad,sample1.bank_rad,sample1.a_ftpss];
-            
-            % Events (dynamic controls)
-            event1 = sample1.updates.event;
-            
+            [sample1, event1, ic1] = sampleFullUncorModel(encIds(j),ac1,sample_time,layers,logical(iniSettings.quantizeOwnshipAlt500));
             trajectory1 = [];
         end
         
@@ -330,72 +304,32 @@ for j = 1:N %Loop through number of encounters
             trajectory2 = upsampleTrajectory(trajectory2{1}); % upsample the results to 10hz. *IMPORTANT: assumes input trajectories are 1hz*
             sample2 = [];
         else
-            % Sample from encounter model
-            done = false;
-            while ~done
-                
-                if  isempty(iniSettings.intEncVariablesFile) && isempty(iniSettings.intEncStatisticsFile)
-                    %Using the default uncorrelated encounter model
-                    initial = {1,4,[],[],[],[],[]}; %Fix geographic region as CONUS (=1), airspace class as other (=4). Optional setting.
-                else
-                    initial = {[],[],[],[],[],[],[]};
-                end
-                
-                [init2, events] = dbn_hierarchical_sample(ac2, dirichlet_initial2, dirichlet_transition2, ...
-                    sample_time, ac2.boundaries, ac2.zero_bins, ac2.resample_rates, initial);
-                
-                % uniform draw for AC2 initial altitude within layer
-                h2 = layers(init2(3),1) + rand*(diff(layers(init2(3),:)));
-                if init2(6) == 0 && iniSettings.quantizeIntruderAlt500 % round to nearest 500-ft increment if level
-                    h2 = round500(h2);
-                end
-                
-                % make sure vertical rate not greater than airspeed
-                if init2(4)*1.68781 > abs(init2(6))/60
-                    done = true;
-                end
+            
+            if isempty(iniSettings.intEncVariablesFile) && isempty(iniSettings.intEncStatisticsFile)
+                start = startDefault;
+            else
+                start = {[],[],[],[],[],[],[]};
             end
+            ac2.start = start;
             
-            % construct controls array for intruder (ac2)
-            controls2 = BuildControlsArray(init2,events,5:7);
-            init2 = ConvertUnits(init2);
-            
-            sample2.runTime_s = sample_time;
-            sample2.altLayer = init2(3);
-            sample2.id = encIds(j);
-            sample2.numberOfAircraft = 2;
-            sample2.v_ftps = init2(4);
-            sample2.n_ft = 0;
-            sample2.e_ft = 0;
-            sample2.h_ft = h2;
-            sample2.heading_rad = 0;
-            sample2.pitch_rad = asin(init2(6)/sample2.v_ftps);
-            sample2.bank_rad = atan(sample2.v_ftps*init2(7)/constants.g);
-            sample2.a_ftpss = init2(5);
-            sample2.updates = EncounterModelEvents( 'event', controls2 );
-            
-            % Simulate dynamics
-            ic2 = [0,sample2.v_ftps,sample2.n_ft,sample2.e_ft,sample2.h_ft,sample2.heading_rad,sample2.pitch_rad,sample2.bank_rad,sample2.a_ftpss];
-            
-            % Events (dynamic controls)
-            event2 = sample2.updates.event;
-            
+            % Sample from encounter model
+            [sample2, event2, ic2] = sampleFullUncorModel(encIds(j),ac2,sample_time,layers,logical(iniSettings.quantizeIntruderAlt500));
             trajectory2 = [];
         end
         
         %% check negative velocities and altitudes
         if ~iniSettings.ownshipSampleTrajectory || ~iniSettings.intruderSampleTrajectory
             if isempty(sample2)
-                results = run_dynamics_fast(ic1,event1,ic1,event1,sample_time);
+                results = run_dynamics_fast(ic1,event1,dyn1,ic1,event1,dyn1,sample_time);
             elseif isempty(sample1)
-                results = run_dynamics_fast(ic2,event2,ic2,event2,sample_time);
+                results = run_dynamics_fast(ic2,event2,dy2,ic2,event2,dyn2,sample_time);
             elseif ~isempty(sample1) && ~isempty(sample2)
-                results = run_dynamics_fast(ic1,event1,ic2,event2,sample_time);
+                results = run_dynamics_fast(ic1,event1,dyn1,ic2,event2,dyn2,sample_time);
             end
             
             if any(results(1).speed_ftps<0  | results(2).speed_ftps<0 | results(1).up_ft<0 | results(2).up_ft<0)
                 if verbose_level <= 0
-                    disp('reject: negative velocities');
+                    disp('reject: negative velocities or altitudes');
                 end
                 continue; % Reject encounter model samples with negative velocities
             end
@@ -440,16 +374,17 @@ for j = 1:N %Loop through number of encounters
             %% initialize encounter
             uncorrelatedParametersIn = UncorEncounterParameters(tCPA, sample_time, isFailed, height_ft, intheight, maxHMD);
             uncorrelatedParametersIn.id = encIds(j);
-            
+
             %Transform events into waypoint trajectories
             if ~iniSettings.ownshipSampleTrajectory && iniSettings.intruderSampleTrajectory
-                results = run_dynamics_fast(ic1,event1,ic1,event1,iniSettings.sample_time);
+                results = run_dynamics_fast(ic1,event1,dyn1,ic1,event1,dyn1,iniSettings.sample_time);
                 trajectory1 = results(1);
             elseif iniSettings.ownshipSampleTrajectory && ~iniSettings.intruderSampleTrajectory
-                results = run_dynamics_fast(ic2,event2,ic2,event2,iniSettings.sample_time);
+                results = run_dynamics_fast(ic2,event2,dyn2,ic2,event2,dyn2,iniSettings.sample_time);
                 trajectory2 = results(2);
             elseif ~iniSettings.ownshipSampleTrajectory && ~iniSettings.intruderSampleTrajectory
-                results = run_dynamics_fast(ic1,event1,ic2,event2,iniSettings.sample_time);
+               results = run_dynamics_fast(ic1,event1,dyn1,ic2,event2,dyn2,iniSettings.sample_time);
+
                 trajectory1 = results(1);
                 trajectory2 = results(2);
             end
@@ -584,7 +519,6 @@ for j = 1:N %Loop through number of encounters
     if iniSettings.outputTrajectories
         %Output results to trajectory file
         writeTrajectoryToFile(trajectoryOut1, trajectoryOut2, encIds(j), saveDirectory);
-        
     end
     
     %If desired, convert trajectories to events
@@ -618,53 +552,3 @@ save([saveDirectory filesep 'metaData.mat'],'enc_metadata','-v7.3');
 save([saveDirectory filesep 'benchmark.mat'],'numTrials','jobTime_s','-v7.3');
 
 end % function
-
-%% Pairing functions
-
-
-%% Build controls array (for encounter events)
-function controls = BuildControlsArray(initial,events,vars)
-constants = load_constants;
-
-t = 0;
-controls = zeros(size(events,1), 1+numel(vars));
-counter = 0;
-x = initial;
-for event = events'
-    delta_t = event(1);
-    if delta_t > 0
-        counter = counter + 1;
-        controls(counter,:) =  [t, x(vars)]; % t dh psi dv (vars will reorder the variables)
-        %controls = [controls; t x(vars)];
-        t = t + delta_t;
-    end
-    if event(2) > 0
-        x(event(2)) = event(3);
-    end
-end
-
-% Remove unused rows
-controls = controls(1:counter,:);
-
-% reorder to [t dh dpsi dv] as DEGAS expects
-controls = controls(:,[1 3 4 2]);
-
-% convert units to DEGAS units
-controls(:,2) = controls(:,2) / constants.min2sec;    % fpm to fps
-controls(:,3) = deg2rad(controls(:,3));               % deg/s to rad/s
-controls(:,4) = controls(:,4) * constants.kt2ftps;    % kts/s to ft/s2;
-
-end
-
-
-%% Unit conversion
-function xOut = ConvertUnits(xIn)
-constants = load_constants;
-
-xOut(1:3) = xIn(1:3);
-xOut(4) = xIn(4) * constants.kt2ftps;   % v: KTAS -> ft/s (use mean altitude for layer)
-xOut(5) = xIn(5) * constants.kt2ftps;   % vdot: kt/s -> ft/s^2
-xOut(6) = xIn(6) / constants.min2sec;   % hdot: ft/min -> ft/s
-xOut(7) = deg2rad(xIn(7));              % psidot: deg/s -> rad/s
-
-end

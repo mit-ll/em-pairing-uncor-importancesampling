@@ -19,7 +19,6 @@ This repository is the public release of the DAA Encounter Generation Tool. This
     - [Persistent System Environment Variables](#persistent-system-environment-variables)
     - [em-core](#em-core)
     - [em-model-manned-bayes](#em-model-manned-bayes)
-    - [Mex](#mex)
     - [Testing the tool](#testing-the-tool)
   - [Run Order](#run-order)
     - [Configure input file](#configure-input-file)
@@ -109,27 +108,11 @@ Immediately after cloning this repository, [create a persistent system environme
 
 ### em-core
 
-Clone [`em-core`](https://github.com/Airspace-Encounter-Models/em-core). Confirm that the system environment variable `AEM_DIR_CORE` has been set, as instructed by its [README](https://github.com/Airspace-Encounter-Models/em-core/blob/master/README.md#persistent-system-environment-variable).
+Clone [`em-core`](https://github.com/Airspace-Encounter-Models/em-core). Confirm that the system environment variable `AEM_DIR_CORE` has been set, as instructed by its [README](https://github.com/Airspace-Encounter-Models/em-core/blob/master/README.md#persistent-system-environment-variable). Please confirm you have compiled the mex function, `run_dynamics_fast`.
 
 ### em-model-manned-bayes
 
 Clone [`em-model-manned-bayes`](https://github.com/Airspace-Encounter-Models/em-model-manned-bayes). Confirm that the system environment variable `AEM_DIR_BAYES` has been set, as instructed by its [README](https://github.com/Airspace-Encounter-Models/em-model-manned-bayes/blob/master/README.md#persistent-system-environment-variable).
-
-### Mex
-
-This repository includes code written in C that needs to be compiled using [`mex`](https://www.mathworks.com/help/matlab/ref/mex.html) before the Encounter Generation Tool can be run. This table lists all the files that need to be mexed.
-
-| Filename  |  Folder |
-| :-------------| :--  |
-| run_dynamics_fast.c  | Encounter_Generation_Tool  |
-| run_dynamics_fast_test.c   | Tests/Code/Helper_Functions  |
-
-For each file, change into the directory containing the file and execute `mex -g filename.c` in the command line. According to [MATLAB documentation](https://www.mathworks.com/help/matlab/ref/mex.html), `-g,` "Adds symbolic information and disables optimizing built object code." While this is flag is primarily used for debugging, there is a known bug, likely in the .c source, where the compiled mex functions will cause segmentation faults on Mac and Linux environments when compiled without the flag. This will generate a [MEX function](https://www.mathworks.com/help/matlab/call-mex-file-functions.html)--e.g., `filename.mexw64` for windows or `filename.mexa64` for linux. For example:
-
-``` matlab
-mex -g Encounter_Generation_Tool/run_dynamics_fast.c
-mex -g Tests/Code/Helper_Functions/run_dynamics_fast_test.c
-```
 
 ### Testing the tool
 

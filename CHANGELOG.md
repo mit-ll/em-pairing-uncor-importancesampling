@@ -7,6 +7,30 @@ and this project should adhere to [Semantic Versioning](https://semver.org/spec/
 
 ## [Unreleased]
 
+## [1.3.0] - 2021-10-01
+
+### Added
+
+- `sampleFullUncorModel` called by `generateDAAEncounterSet` to minimize code duplication
+
+### Changed
+
+- Implemented `UncorEncounterModel` class for loading the parameters and sampling the Bayesian networks. The track generation capability of the class is not implemented here, rather `run_dynamics_fast` is still called directly.
+- Updated calls to `run_dynamics_fast` with two additional inputs corresponding to dynamic limit constraints. Dynamic constraints were previously hardcoded constants in `run_dynamics_fast.c`
+- Updated `runDynamicsFastTests` to compare results to a now stored baseline results from the .mat files. Previously this script just plotted encounters but had no means to test or compare changes
+- Helper functions of `BuildControlsArray` and `ConvertUnits` moved to be helper functions of `sampleFullUncorModel`
+- Moved `ScriptedEncounter` and `UncorEncounterParameters` to class specific directories for better organization
+- Property validation syntax for `ScriptedEncounter` and `UncorEncounterParameters`
+
+### Fixed
+
+- `simulateDynamicsLimits` incorrectly stated that a 3 degree per second dynamic limit was used when in actuality it was a 1.5 degree per second limit. Function comments updated.
+
+### Removed
+
+- `run_dynamics_fast_test` removed because there is no need for different variants of run_dynamics_fast with different dynamic constraints
+- `EncounterModelEvents` was moved to em-model-manned-bayes
+
 ## [1.2.0] - 2021-07-19
 
 ### Added

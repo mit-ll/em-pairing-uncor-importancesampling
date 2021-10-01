@@ -53,7 +53,7 @@ For each encounter, the Encounter Generation Tool outputs a metadata (.mat) file
 
 DISTRIBUTION STATEMENT A. Approved for public release. Distribution is unlimited.
 
-© 2018, 2019, 2020 Massachusetts Institute of Technology.
+© 2018, 2019, 2020, 2021 Massachusetts Institute of Technology.
 
 This material is based upon work supported by the National Aeronautics and Space Administration under Air Force Contract No. FA8702-15-D-0001. Any opinions, findings, conclusions or recommendations expressed in this material are those of the author(s) and do not necessarily reflect the views of the National Aeronautics and Space Administration .
 
