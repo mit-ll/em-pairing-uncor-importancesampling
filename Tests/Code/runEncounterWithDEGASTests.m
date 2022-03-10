@@ -1,4 +1,4 @@
-% Copyright 2018 - 2020, MIT Lincoln Laboratory
+% Copyright 2018 - 2022, MIT Lincoln Laboratory
 % SPDX-License-Identifier: X11
 %%
 % RUNENCOUNTERWITHDEGASTESTS This test ensures that the output of the
@@ -6,7 +6,7 @@
 % DEGAS. This test requires the DEGAS repository.
 %% Check for DEGAS
 if isempty(getenv('DEGAS_HOME'))
-    error('startup:degas_home','runEncounterWithDEGASTests requires the DEGAS repository. System environment variable, DEGAS_HOME, not found and assuming DEGAS is not installed\n Please ensure this repository is on your Matlab path before running this test. You can add it to your path by running startup.m in the DEGAS code directory.')
+    error('startup:degas_home', 'runEncounterWithDEGASTests requires the DEGAS repository. System environment variable, DEGAS_HOME, not found and assuming DEGAS is not installed\n Please ensure this repository is on your Matlab path before running this test. You can add it to your path by running startup.m in the DEGAS code directory.');
 end
 
 %%
@@ -27,7 +27,7 @@ s.encounterFile = encFile;
 
 % Switch to the directory that conains the simulation
 simDir = which('NominalEncounter.slx');
-[simDir,~,~] = fileparts(simDir);
+[simDir, ~, ~] = fileparts(simDir);
 cd(simDir);
 
 % Setup the encounter. The encounter number is usually used as the input to

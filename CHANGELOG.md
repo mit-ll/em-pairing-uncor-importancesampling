@@ -7,14 +7,14 @@ and this project should adhere to [Semantic Versioning](https://semver.org/spec/
 
 ## [Unreleased]
 
-## [1.3.0] - 2021-10-01
-
 ### Added
 
 - `sampleFullUncorModel` called by `generateDAAEncounterSet` to minimize code duplication
 
 ### Changed
 
+- Updated double array (`ic`, `ic1`, `ic2`) inputs to run_dynamics_fast in response to [pull request #8 in `em-core`](https://github.com/Airspace-Encounter-Models/em-core/pull/9)
+- Style fixes for entire repository using [MH Style from MISS_HIT](https://misshit.org/). Specifically used the following code in the root directory for this repository: `mh_style . --fix`
 - Implemented `UncorEncounterModel` class for loading the parameters and sampling the Bayesian networks. The track generation capability of the class is not implemented here, rather `run_dynamics_fast` is still called directly.
 - Updated calls to `run_dynamics_fast` with two additional inputs corresponding to dynamic limit constraints. Dynamic constraints were previously hardcoded constants in `run_dynamics_fast.c`
 - Updated `runDynamicsFastTests` to compare results to a now stored baseline results from the .mat files. Previously this script just plotted encounters but had no means to test or compare changes
@@ -37,7 +37,7 @@ and this project should adhere to [Semantic Versioning](https://semver.org/spec/
 
 - `.gitattributes` added for repository management
 - `preallocateEncProperties` to preallocate struct of encounter metadata
-- Basic performance benchmark metrics to generateDAAEncounterSet() and plotted in RUN_DAAEncounterModelTool_serial
+- Basic performance benchmark metrics to `generateDAAEncounterSet()` and plotted in `RUN_DAAEncounterModelTool_serial`
 - Default input and output directories
 
 ### Changed
@@ -45,7 +45,7 @@ and this project should adhere to [Semantic Versioning](https://semver.org/spec/
 - Substantial performance boost through preallocating, minimizing use of dynamically growth of arrays, and removing large variables that are not used. On a local windows machine, these improvements reduce the time to generate 100K encounters from days to hours
 - Updated mex instructions to use the -g flag
 - Trajectory .csv files explicitly use UTF-8 encoding
-- Updated line endings for various files to better cross platform compability 
+- Updated line endings for various files to better cross platform compatibility
 - Renamed matlab startup script
 - MATLAB startip script checks for symbolic math toolbox
 - MATLAB startup script to add self path using system environment variable instead of `pwd()`

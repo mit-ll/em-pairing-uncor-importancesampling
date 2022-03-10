@@ -1,4 +1,4 @@
-% Copyright 2018 - 2020, MIT Lincoln Laboratory
+% Copyright 2018 - 2022, MIT Lincoln Laboratory
 % SPDX-License-Identifier: X11
 %%
 %% This script runs all tests for the encounter generation tool.

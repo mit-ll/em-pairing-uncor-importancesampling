@@ -1,5 +1,5 @@
 classdef ScriptedEncounter
-    % Copyright 2018 - 2021, MIT Lincoln Laboratory
+    % Copyright 2018 - 2022, MIT Lincoln Laboratory
     % SPDX-License-Identifier: X11
     % SCRIPTEDENCOUNTER An encounter between one or more aircraft
     %   The initial geometry and subsequent controls of a scripted
